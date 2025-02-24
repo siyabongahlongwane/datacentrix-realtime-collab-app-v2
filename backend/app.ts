@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { prisma, db } from './config/db';
 import { userRoutes } from './src/routes';
+import redisClient from './config/redis';
 
 dotenv.config();
 
@@ -19,4 +20,4 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Collab Server Is Up.');
 });
 
-export { app, prisma, db };
+export { app, prisma, db, redisClient };
