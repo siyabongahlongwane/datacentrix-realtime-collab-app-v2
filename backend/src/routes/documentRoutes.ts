@@ -4,7 +4,7 @@ import { getAllDocuments, getDocument, createDocument } from '../controllers/doc
 const router = express.Router();
 
 router.get('/getall', getAllDocuments);
-router.get('/getsingle', getDocument);
+router.get('/getsingle/:id', getDocument);
 router.post('/create-document', createDocument);
 
 export default router;

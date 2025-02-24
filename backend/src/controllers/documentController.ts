@@ -4,6 +4,11 @@ import asyncHandler from 'express-async-handler';
 
 export const getDocument = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const { id } = req.params;
+    if (!id) {
+      res.status(400).json({ error: 'id is required' });
+      return;
+    }
     const documents = await prisma.document.findUnique({
       where: { id: +req.params.id },
     });
