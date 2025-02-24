@@ -4,6 +4,7 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { RegisterFormData } from "@/app/interfaces/IUser";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link"
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as zod from "zod"
@@ -38,6 +39,7 @@ const Register = () => {
         resolver: zodResolver(registerFormSchema)
     });
 
+    const router = useRouter();
 
     const onSubmit = async (data: RegisterFormData): Promise<void> => {
         setError(null);
@@ -48,12 +50,14 @@ const Register = () => {
         try {
             const { success, message } = await registerHandler(data);
             if (success) {
-                setSuccessMessage('Successfully registered! Please login to continue.');
+                setSuccessMessage(message);
+                setTimeout(() => {
+                    router.push("/login");
+                }, 1200)
                 return;
             }
             throw new Error(message);
         } catch (error) {
-            console.error("Error registering:", error);
             setError(error instanceof Error ? error.message : String(error));
         }
     };
