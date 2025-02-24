@@ -1,3 +1,3 @@
-import { createNewUser } from "./userController";
+import { createNewUser, loginUser } from "./userController";
 
-export { createNewUser };
+export { createNewUser, loginUser };
