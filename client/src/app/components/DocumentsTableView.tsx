@@ -5,7 +5,14 @@ import Avatar from "./Avatar";
 import Link from "next/link";
 import { useState } from 'react';
 
-const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError, initials }: { title: string, documents: IDocumentCard[], showAddBtn?: boolean, error?: string, initials: string }) => {
+interface IDocumentsTableViewProps {
+    title: string,
+    documents: IDocumentCard[],
+    showAddBtn?: boolean,
+    error?: string
+}
+
+const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: IDocumentsTableViewProps) => {
     const [documents, setDocuments] = useState<IDocumentCard[]>(initialDocuments);
     const [error, setError] = useState<string>(initialError || '');
     const [isCreating, setIsCreating] = useState<boolean>(false);
@@ -58,7 +65,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
                                             </td>
                                             <td className="py-3 w-[20%] px-4">
                                                 <div className="flex items-center space-x-2">
-                                                    <Avatar width='w-7' height='h-7' bg='bg-[#005d87]' initials={initials} fontSize={10} />
+                                                    <Avatar width='w-7' height='h-7' bg='bg-[#005d87]' fontSize={10} />
                                                     <small className="text-gray-600 font-semibold">Me</small>
                                                 </div>
                                             </td>
