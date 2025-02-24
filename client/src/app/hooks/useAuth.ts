@@ -13,8 +13,6 @@ export const useAuth = () => {
         setLoading(true);
         try {
             const response = await axios.post(`${serverURL}/users/register`, data);
-            const { user, access_token } = response.data;
-            login({ user, access_token });
             return { success: true, message: response?.data?.message };
         } catch (error) {
             console.error("Registration error:", error);
@@ -28,5 +26,24 @@ export const useAuth = () => {
         }
     };
 
-    return { registerHandler, loading };
+    const loginHandler = async (data: { email: string; password: string }) => {
+        setLoading(true);
+        try {
+            const response = await axios.post(`${serverURL}/users/login`, data);
+            const { user, access_token } = response.data;
+            login({ user, access_token });
+            return { success: true, message: response?.data?.message };
+        } catch (error) {
+            console.error("Login error:", error);
+            if (axios.isAxiosError(error)) {
+                return { success: false, message: error.response?.data?.error || "Login failed." };
+            } else {
+                return { success: false, message: "Login failed." };
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { registerHandler, loginHandler, loading };
 };
