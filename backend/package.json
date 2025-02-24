@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon server.ts",
     "start": "node src/server.js",
-    "migrate": "npx prisma migrate dev --name init  --schema=src/prisma/schema.prisma",
+    "migrate": "npx prisma migrate dev --name=init  --schema=src/prisma/schema.prisma",
     "generate": "npx prisma generate --schema=src/prisma/schema.prisma"
   },
   "repository": {

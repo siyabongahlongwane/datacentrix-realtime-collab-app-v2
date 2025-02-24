@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-
+import { prisma, db } from './config/db';
 dotenv.config();
 
 const app = express();
@@ -14,4 +14,4 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Collab Server Is Up.');
 });
 
-export { app };
+export { app, prisma, db };
