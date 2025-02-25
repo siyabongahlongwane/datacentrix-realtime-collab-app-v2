@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../app';
 import asyncHandler from 'express-async-handler';
 
@@ -6,7 +6,7 @@ import { comparePasswords, hashPassword, validatePasswordParams } from '../utili
 import { User } from '@prisma/client';
 import JWT from 'jsonwebtoken';
 
-export const createNewUser = asyncHandler(async (req: Request, res: Response) => {
+export const createNewUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const hasMissingData = Object.values(req.body).some(val => !val);
         if (hasMissingData) {
@@ -43,15 +43,11 @@ export const createNewUser = asyncHandler(async (req: Request, res: Response) =>
         throw new Error('User registration failed');
 
     } catch (error) {
-        if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'An unknown error occurred' });
-        }
+        next(error);
     }
 })
 
-export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+export const loginUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const hasMissingData = Object.values(req.body).some(val => !val);
         if (hasMissingData) {
@@ -81,10 +77,6 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         res.json({ success: true, user, access_token });
 
     } catch (error) {
-        if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'An unknown error occurred' });
-        }
+        next(error);
     }
 })
