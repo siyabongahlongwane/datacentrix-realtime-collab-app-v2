@@ -1,6 +1,7 @@
 'use client'
 
 import Header from '@/app/components/Header';
+import ProtectedRoute from '@/app/components/ProtectedRoutes';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
@@ -20,10 +21,12 @@ const DocumentsLayout = ({ children }: { children: React.ReactNode }) => {
     }, [documentId]);
 
     return (
-        <>
-            <Header showShareBtn={showShareBtn} showSearchbar={showSearchbar} />
-            <div>{children}</div>
-        </>
+        <ProtectedRoute>
+            <>
+                <Header showShareBtn={showShareBtn} showSearchbar={showSearchbar} />
+                <div>{children}</div>
+            </>
+        </ProtectedRoute>
     );
 };
 
