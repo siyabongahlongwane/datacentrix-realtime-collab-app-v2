@@ -1,7 +1,7 @@
+import { Request, Response } from "express";
 import { app } from "./app";
 
-const PORT = process.env.PORT || 8080;
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Test route to determine whether the server is up
+app.get('/', (req: Request, res: Response) => {
+    res.send('Collab Server Is Up.');
 });
