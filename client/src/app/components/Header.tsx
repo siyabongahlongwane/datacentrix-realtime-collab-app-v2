@@ -6,11 +6,14 @@ import Image from 'next/image';
 import Searchbar from './Searchbar';
 import Avatar from './Avatar';
 import { FaShare } from "react-icons/fa";
+import Link from 'next/link';
 const Header = ({ showShareBtn, showSearchbar }: { showSearchbar?: boolean, showShareBtn?: boolean }) => {
     return (
         <div className='bg-white h-16 flex items-center px-4 datacentrix-header'>
             <div className="flex items-center justify-between w-full">
-                <Image src={logo} alt="Logo" width={180} />
+                <Link href={'/documents'}>
+                    <Image src={logo} alt="Logo" width={180} />
+                </Link>
                 {showSearchbar && <Searchbar />}
                 <div className="flex gap-3">
                     {

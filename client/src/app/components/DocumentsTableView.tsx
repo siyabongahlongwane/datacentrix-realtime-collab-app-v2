@@ -8,7 +8,13 @@ import { useState } from 'react';
 import { useAuthStore } from "../store/useAuthStore";
 import { useRouter } from "next/navigation";
 
-const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: { title: string, documents: IDocumentCard[], showAddBtn?: boolean, error: string, initials: string }) => {
+interface IDocumentTableViewProps {
+    title: string,
+    documents: IDocumentCard[],
+    showAddBtn?: boolean,
+    error: string
+}
+const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: IDocumentTableViewProps) => {
     const [documents, setDocuments] = useState<IDocumentCard[]>(initialDocuments);
     const [error, setError] = useState<string>(initialError);
     const [isCreating, setIsCreating] = useState<boolean>(false);
