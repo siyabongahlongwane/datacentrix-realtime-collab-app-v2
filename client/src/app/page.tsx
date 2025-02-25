@@ -1,7 +1,12 @@
-import Register from "./(pages)/register/page";
+'use client'
+
+import Documents from "./(pages)/documents/page";
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 export default function Home() {
   return (
-    <Register />
+    <ProtectedRoute>
+      <Documents />
+    </ProtectedRoute>
   );
 }
