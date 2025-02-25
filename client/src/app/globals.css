@@ -18,3 +18,32 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Editor Styles */
+.ql-toolbar {
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+
+.editor-container .ql-editor {
+  background: #fff;
+  width: 100%;
+  min-height: 80vh;
+}
+
+.editor-container .ql-container .ql-snow {
+  border: none;
+  display: flex;
+  justify-content: center;
+}
+
+.editor-container .ql-toolbar .ql-snow {
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
