@@ -4,7 +4,6 @@ import DocumentsList from '@/app/components/DocumentsList'
 import DocumentsTableView from '@/app/components/DocumentsTableView'
 import { useAuthStore } from '@/app/store/useAuthStore'
 import axios from 'axios'
-import Head from 'next/head'
 import React, { useEffect, useState } from 'react'
 
 const Documents = () => {
@@ -29,8 +28,10 @@ const Documents = () => {
     };
 
     useEffect(() => {
-        fetchDocuments();
-    }, [user?.id]);
+        if(user) {
+            fetchDocuments();
+        }
+    }, [!user?.id]);
 
 
     if (loading) {

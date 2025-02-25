@@ -4,7 +4,6 @@ import cors from 'cors';
 import { prisma, db } from './config/db';
 import { documentRoutes, userRoutes } from './src/routes';
 import redisClient from './config/redis';
-import { ws } from './src/sockets/websocket';
 
 dotenv.config();
 
@@ -17,4 +16,4 @@ app.use(express.json({ limit: '1mb' }));
 app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 
-export { app, prisma, db, redisClient, ws };
+export { app, prisma, db, redisClient};
