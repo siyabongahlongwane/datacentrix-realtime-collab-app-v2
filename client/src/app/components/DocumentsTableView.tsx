@@ -3,22 +3,32 @@ import { IDocumentCard } from "./DocumentCard"
 import { IoDocumentTextOutline } from "react-icons/io5";
 import Avatar from "./Avatar";
 import Link from "next/link";
+import axios from 'axios';
 import { useState } from 'react';
+import { useAuthStore } from "../store/useAuthStore";
+import { useRouter } from "next/navigation";
 
-interface IDocumentsTableViewProps {
-    title: string,
-    documents: IDocumentCard[],
-    showAddBtn?: boolean,
-    error?: string
-}
-
-const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: IDocumentsTableViewProps) => {
+const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: { title: string, documents: IDocumentCard[], showAddBtn?: boolean, error: string, initials: string }) => {
     const [documents, setDocuments] = useState<IDocumentCard[]>(initialDocuments);
-    const [error, setError] = useState<string>(initialError || '');
+    const [error, setError] = useState<string>(initialError);
     const [isCreating, setIsCreating] = useState<boolean>(false);
+    const { user } = useAuthStore(state => state);
+    const router = useRouter();
 
     const createNewDocument = async () => {
-        console.log('createNewDocument');
+        try {
+            setIsCreating(true);
+            setError('');
+            const response = await axios.post<IDocumentCard>(`${process.env.NEXT_PUBLIC_SERVER_URL}/documents/create-document`, { owner_id: user?.id });
+            const newDoc = response.data;
+            setDocuments(prevDocuments => [newDoc, ...prevDocuments]);
+            router.push(`/documents/${newDoc.id}`);
+        } catch (err) {
+            console.error('Error creating new document:', err);
+            setError('Failed to create a new document. Please try again.');
+        } finally {
+            setIsCreating(false);
+        }
     }
 
     return (
