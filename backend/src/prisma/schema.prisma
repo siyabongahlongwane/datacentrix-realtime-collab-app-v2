@@ -8,28 +8,42 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  email      String     @unique
-  password   String
-  first_name String
-  last_name  String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  documents  Document[]
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  password     String
+  first_name   String
+  last_name    String
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  documents    Document[]   @relation("OwnerDocuments")
+  collaborations Collaborator[]
 
   @@map("users")
 }
 
 model Document {
-  id               Int      @id @default(autoincrement())
-  title            String   @default("Untitled Document")
-  owner            User     @relation(fields: [owner_id], references: [id])
-  collaborators    Json
+  id               Int            @id @default(autoincrement())
+  title            String         @default("Untitled Document")
+  owner_id         Int
+  owner            User           @relation("OwnerDocuments", fields: [owner_id], references: [id])
+  collaborators    Collaborator[]
   content          Json
   cursor_positions Json
   history          Json
-  last_edited      DateTime @updatedAt
-  owner_id         Int
+  last_edited      DateTime       @updatedAt
 
   @@map("documents")
+}
+
+model Collaborator {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  document_id Int
+  role        String   @default("Viewer")
+  
+  user        User     @relation(fields: [user_id], references: [id])
+  document    Document @relation(fields: [document_id], references: [id])
+
+  @@unique([user_id, document_id])
+  @@map("collaborators")
 }
