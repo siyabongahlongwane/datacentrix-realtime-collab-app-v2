@@ -8,7 +8,6 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuthStore();
     const router = useRouter();
     useEffect(() => {
-        console.log({ user })
         if (user) {
             router.push('/documents');
         }

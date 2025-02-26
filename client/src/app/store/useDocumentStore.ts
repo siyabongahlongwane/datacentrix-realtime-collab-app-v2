@@ -19,7 +19,6 @@ export const useDocumentStore = create<DocumentStoreState>((set, get) => ({
     filterDocuments: () => {
         const { search, documents } = get();
         const filteredDocuments = documents.filter((doc) => {
-            console.log(doc);
             if (!search) {
                 return doc;
             }

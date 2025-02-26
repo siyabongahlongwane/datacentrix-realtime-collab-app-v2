@@ -48,7 +48,7 @@ const Documents = () => {
             <div className='flex flex-col gap-3 p-4'>
                 <DocumentsList title='Recently Viewed' documents={filteredDocuments.slice(0, 3)} error={error} />
                 <DocumentsTableView title='My Documents' documents={filteredDocuments} showAddBtn error={error} />
-                <DocumentsTableView title='Shared With Me' documents={filteredDocuments} showAddBtn error={error} />
+                <DocumentsTableView title='Shared With Me' documents={filteredDocuments} error={error} />
             </div>
         </div>
     );

@@ -1,24 +1,30 @@
-import React, { useEffect } from 'react';
+'use client'
+import React, { useCallback, useEffect } from 'react';
+import { useToastStore } from '../store/useToastStore';
 
 interface ToastProps {
   message: string;
   type: 'success' | 'error';
-  onClose: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ message, type }) => {
+  const { toggleToast } = useToastStore();
+
+  const closeToast = useCallback(() => {
+    toggleToast({ message: '', type: 'success', open: false });
+  }, [toggleToast])
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-
+      closeToast()
+    }, 5000);
     return () => {
       clearTimeout(timer);
     };
-  }, [onClose]);
+  }, [closeToast]);
 
   return (
-    <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+    <div onClick={closeToast} className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-[20] cursor-pointer ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
       {message}
     </div>
   );

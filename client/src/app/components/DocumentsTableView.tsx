@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useAuthStore } from "../store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { useDocumentStore } from "../store/useDocumentStore";
+import { useToastStore } from "../store/useToastStore";
 
 interface IDocumentTableViewProps {
     title: string,
@@ -23,6 +24,8 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
     const { user } = useAuthStore(state => state);
     const router = useRouter();
 
+    const { toggleToast } = useToastStore();
+
     const createNewDocument = async () => {
         try {
             setIsCreating(true);
@@ -34,6 +37,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
         } catch (err) {
             console.error('Error creating new document:', err);
             setError('Failed to create a new document. Please try again.');
+            toggleToast({ message: 'Failed to create a new document. Please try again.', type: 'error', open: true});
         } finally {
             setIsCreating(false);
         }

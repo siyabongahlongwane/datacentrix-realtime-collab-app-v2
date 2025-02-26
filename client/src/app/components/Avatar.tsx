@@ -3,12 +3,16 @@ import { IAvatar } from '../interfaces/IAvatar';
 import { useAuthStore } from '../store/useAuthStore';
 import { FaFileAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useToastStore } from '../store/useToastStore';
 
 const Avatar = ({ width, height, bg, fontSize }: IAvatar) => {
   const { user, logout } = useAuthStore();
   const [initials, setInitials] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { toggleToast } = useToastStore();
 
   useEffect(() => {
     setInitials(`${user?.first_name[0]}${user?.last_name[0]}`);
@@ -20,7 +24,8 @@ const Avatar = ({ width, height, bg, fontSize }: IAvatar) => {
 
   const handleLogout = () => {
     logout();
-    // Redirect to login page or perform other logout actions
+    router.push('/login');
+    toggleToast({ message: 'Logged out successfully.', type: 'success', open: true });
   };
 
   const handleClickOutside = (event: MouseEvent) => {

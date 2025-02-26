@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
 import { IUser } from "../interfaces/IUser";
+import { useToastStore } from "./useToastStore";
 
 type AuthState = {
     user: IUser | null;
@@ -18,12 +19,14 @@ export const useAuthStore = create<AuthState>()(
                 access_token: null,
                 isAuthenticated: false,
 
-                login: ({ user, access_token }) =>
-                    set({ user, access_token, isAuthenticated: true }),
-
+                login: ({ user, access_token }) => {
+                    set({ user, access_token, isAuthenticated: true });
+                    useToastStore.getState().toggleToast({
+                        message: "Logged in successfully.", type: "success", open: true,
+                    });
+                },
                 logout: () => {
                     set({ user: null, access_token: null, isAuthenticated: false });
-                    window.location.href = '/login';
                 }
             }),
             {

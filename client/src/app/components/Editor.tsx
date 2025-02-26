@@ -6,8 +6,8 @@ import { useParams } from 'next/navigation';
 import { TOOLBAR_OPTIONS } from '../configs/editor';
 import { useAuthStore } from '../store/useAuthStore';
 import { useRouter } from 'next/navigation';
-import Toast from './Toast';
 import DocumentNameInput from './DocumentNameInput';
+import { useToastStore } from '../store/useToastStore';
 
 const SAVE_INTERVAL_MS = 10000;
 interface WrapperRef {
@@ -20,8 +20,9 @@ const Editor = () => {
   const { id: documentId } = useParams();
   const { user, logout, access_token } = useAuthStore();
   const router = useRouter();
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [documentName, setDocumentName] = useState('Untitled Document');
+  const { toggleToast } = useToastStore();
+
 
   useEffect(() => {
     console.log({ documentId })
@@ -79,22 +80,19 @@ const Editor = () => {
   }, [socket, quill, documentId]);
 
   const errorHandler = useCallback(({ message, redirect, clearData }: { message: string, redirect?: boolean, clearData?: boolean }) => {
-    console.log(message);
     console.error('WebSocket error:', message);
-    setToastMessage({ message, type: 'error' });
+    toggleToast({ message, type: 'error', open: true });
+
     if (clearData) {
-      setTimeout(() => {
-        quill?.disable();
-        logout();
-        return;
-      }, 3000);
+      quill?.disable();
+      logout();
+      router.push('/login');
     }
+
     if (redirect) {
-      setTimeout(() => {
-        router.push('/documents');
-      }, 3000);
+      router.push('/documents');
     }
-  }, [quill, logout, router]);
+  }, [quill, logout, router, toggleToast]);
 
   useEffect(() => {
     if (!socket) return;
@@ -139,9 +137,6 @@ const Editor = () => {
 
   return (
     <div className='relative p-4'>
-      {toastMessage && (
-        <Toast message={toastMessage.message} type={toastMessage.type} onClose={() => setToastMessage(null)} />
-      )}
       <div className="pb-4">
         <DocumentNameInput
           documentName={documentName}

@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         if (!checkingAuth && !user) {
             router.push("/login");
         } else {
-            router.push("/documents");
+            // router.push("/documents");
         }
         setCheckingAuth(false);
     }, [user, router, checkingAuth]);
