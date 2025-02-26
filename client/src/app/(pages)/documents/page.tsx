@@ -44,7 +44,7 @@ const Documents = () => {
     }
 
     return (
-        <div className='bg-[#005d87] min-h-screen'>
+        <div className='bg-[#005d87]'>
             <div className='flex flex-col gap-3 p-4'>
                 <DocumentsList title='Recently Viewed' documents={filteredDocuments.slice(0, 3)} error={error} />
                 <DocumentsTableView title='My Documents' documents={filteredDocuments} showAddBtn error={error} />
