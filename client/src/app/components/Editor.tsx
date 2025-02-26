@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { TOOLBAR_OPTIONS } from '../configs/editor';
 import { useAuthStore } from '../store/useAuthStore';
 import Toast from './Toast';
+import DocumentNameInput from './DocumentNameInput';
 
 const SAVE_INTERVAL_MS = 10000;
 interface WrapperRef {
@@ -106,10 +107,13 @@ const Editor = () => {
   }, []);
 
   return (
-    <div className='relative'>
+    <div className='relative p-4'>
       {showToast && toastMessage && (
         <Toast message={toastMessage.message} type={toastMessage.type} onClose={() => setShowToast(false)} />
       )}
+      <div className="my-2">
+        <DocumentNameInput />
+      </div>
       <div ref={wrapperRef} className='editor-container w-full'></div>
     </div>
   );
