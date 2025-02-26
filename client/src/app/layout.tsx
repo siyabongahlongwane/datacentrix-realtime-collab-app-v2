@@ -4,6 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Toast from "./components/Toast";
 import { useToastStore } from "./store/useToastStore";
+import { useAuthStore } from "./store/useAuthStore";
+import { useEffect } from "react";
+import { setupAxiosInterceptors } from "@/utilities/axiosInterceptor";
+import { useRouter } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +24,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { message, type, open } = useToastStore(state => state.toast);
+  const { toast: { message, type, open }, toggleToast } = useToastStore(state => state);
+  const { logout } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    setupAxiosInterceptors(router);
+  }, [logout, toggleToast, router]);
 
   return (
     <html lang="en">

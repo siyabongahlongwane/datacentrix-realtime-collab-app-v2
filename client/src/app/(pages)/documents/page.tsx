@@ -5,20 +5,22 @@ import DocumentsTableView from '@/app/components/DocumentsTableView'
 import { IDocumentCard } from '@/app/interfaces/IDocumentCard'
 import { useAuthStore } from '@/app/store/useAuthStore'
 import { useDocumentStore } from '@/app/store/useDocumentStore'
-import axios from 'axios'
+import axiosInstance from '@/utilities/axiosInterceptor'
 import React, { useCallback, useEffect, useState } from 'react'
 
 const Documents = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const { user } = useAuthStore(state => state);
-    const {setDocuments, filterDocuments, filteredDocuments} = useDocumentStore();
+    const { setDocuments, filterDocuments, filteredDocuments } = useDocumentStore();
 
     const fetchDocuments = useCallback(async () => {
         try {
             setLoading(true);
             setError('');
-            const response = await axios.get<IDocumentCard[]>(`${process.env.NEXT_PUBLIC_SERVER_URL}/documents/getall?id=${user?.id}`);
+            
+            const response = await axiosInstance.get<IDocumentCard[]>(`/documents/getall?id=${user?.id}`);
+
             setDocuments(response.data);
             filterDocuments();
         } catch (err) {

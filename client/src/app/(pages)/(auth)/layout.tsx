@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuthStore();
     const router = useRouter();
+    
     useEffect(() => {
         if (user) {
             router.push('/documents');

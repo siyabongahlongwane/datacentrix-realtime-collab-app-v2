@@ -33,9 +33,7 @@ const Login = () => {
             const { success, message } = await loginHandler(data);
             if (success) {
                 setSuccessMessage(message);
-                setTimeout(() => {
-                    router.push("/documents");
-                }, 1200)
+                router.push("/documents");
                 return;
             }
             throw new Error(message);

@@ -10,8 +10,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (!checkingAuth && !user) {
             router.push("/login");
-        } else {
-            // router.push("/documents");
         }
         setCheckingAuth(false);
     }, [user, router, checkingAuth]);

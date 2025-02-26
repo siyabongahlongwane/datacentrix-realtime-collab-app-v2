@@ -1,7 +1,7 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import JWT from 'jsonwebtoken';
 import { prisma } from '../../app';
-
+import asyncHandler from 'express-async-handler';
 interface JwtPayload {
     id: string;
     email: string;
@@ -11,7 +11,7 @@ interface ModifiedRequest extends Request {
     user?: import('@prisma/client').User;
 }
 
-const authHandler = async (req: ModifiedRequest, res: Response, next: NextFunction) => {
+const authHandler = asyncHandler(async (req: ModifiedRequest, res: Response, next: NextFunction): Promise<any> => {
     const authHeader = (req.headers as any)?.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -45,6 +45,6 @@ const authHandler = async (req: ModifiedRequest, res: Response, next: NextFuncti
             throw new Error('Internal server error');
         }
     }
-};
+});
 
 export { authHandler };

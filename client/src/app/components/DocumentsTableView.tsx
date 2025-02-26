@@ -3,12 +3,12 @@ import { IDocumentCard } from "./DocumentCard"
 import { IoDocumentTextOutline } from "react-icons/io5";
 import Avatar from "./Avatar";
 import Link from "next/link";
-import axios from 'axios';
 import { useState } from 'react';
 import { useAuthStore } from "../store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { useDocumentStore } from "../store/useDocumentStore";
 import { useToastStore } from "../store/useToastStore";
+import axiosInstance from "@/utilities/axiosInterceptor";
 
 interface IDocumentTableViewProps {
     title: string,
@@ -30,7 +30,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
         try {
             setIsCreating(true);
             setError('');
-            const response = await axios.post<IDocumentCard>(`${process.env.NEXT_PUBLIC_SERVER_URL}/documents/create-document`, { owner_id: user?.id });
+            const response = await axiosInstance.post<IDocumentCard>(`${process.env.NEXT_PUBLIC_SERVER_URL}/documents/create-document`, { owner_id: user?.id });
             const newDoc = response.data;
             setDocuments([newDoc, ...initialDocuments]);
             router.push(`/documents/${newDoc.id}`);
