@@ -18,14 +18,19 @@ const Editor = () => {
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);
   const [quill, setQuill] = useState<Quill | undefined>(undefined);
   const { id: documentId } = useParams();
-  const { user } = useAuthStore();
+  const { user, logout, access_token } = useAuthStore();
   const router = useRouter();
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [documentName, setDocumentName] = useState('Untitled Document');
 
   useEffect(() => {
+    console.log({ documentId })
     const _socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
       transports: ['websocket', 'polling'],
+      auth: { token: access_token },
+      query: {
+        documentId: 2,
+      }
     });
 
     setSocket(_socket);
@@ -33,7 +38,7 @@ const Editor = () => {
     return () => {
       _socket.disconnect();
     };
-  }, []);
+  }, [access_token, documentId]);
 
   useEffect(() => {
     if (!socket || !quill) return;
@@ -73,25 +78,33 @@ const Editor = () => {
     };
   }, [socket, quill, documentId]);
 
-  // Add WebSocket error event listener
+  const errorHandler = useCallback(({ message, redirect, clearData }: { message: string, redirect?: boolean, clearData?: boolean }) => {
+    console.log(message);
+    console.error('WebSocket error:', message);
+    setToastMessage({ message, type: 'error' });
+    if (clearData) {
+      setTimeout(() => {
+        quill?.disable();
+        logout();
+        return;
+      }, 3000);
+    }
+    if (redirect) {
+      setTimeout(() => {
+        router.push('/documents');
+      }, 3000);
+    }
+  }, [quill, logout, router]);
+
   useEffect(() => {
     if (!socket) return;
 
-    const errorHandler = ({ message, redirect }: { message: string, redirect?: boolean }) => {
-      console.error('WebSocket error:', message);
-      setToastMessage({ message: 'You are not authorized to view this document', type: 'error' });
-      if (redirect)
-        setTimeout(() => {
-          router.push('/documents');
-        }, 3000);
-    };
-
-    socket.on('error', errorHandler);
+    socket?.on('error', errorHandler);
 
     return () => {
-      socket.off('error', errorHandler);
+      socket?.off('error', errorHandler);
     };
-  }, [socket, router]);
+  }, [socket, router, logout, quill, errorHandler]);
 
   useEffect(() => {
     if (!socket) return;

@@ -1,7 +1,9 @@
 import { createServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { app, prisma, redisClient } from '../../app';
 import Delta from 'quill-delta';
+import { ICustomSocket } from '../interfaces/ICustomSocket';
+import { checkSocketAuthSession } from '../middleware';
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -10,10 +12,6 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
-
-interface CustomSocket extends Socket {
-    documentId?: string;
-}
 
 // Helper function to apply operational transforms
 const applyOT = (currentContent: any, changes: any) => {
@@ -27,10 +25,12 @@ const applyOT = (currentContent: any, changes: any) => {
     }
 };
 
-io.on('connection', (socket: CustomSocket) => {
-    console.log('New client connected');
+io.on('connection', (socket: ICustomSocket) => {
+    console.log('New client connected attempt to connect');
 
     socket.on('get-document', async ([documentId, userId]: [string, string]) => {
+
+        checkSocketAuthSession(socket, documentId);
         console.log(`Fetching document ${documentId}`);
 
         try {
@@ -55,7 +55,6 @@ io.on('connection', (socket: CustomSocket) => {
                 return;
             }
 
-            socket.join(documentId);
             socket.emit('load-document', { doc: JSON.parse(document), title: usersAssociatedWithDoc.title });
         } catch (error) {
             console.error('Error fetching document:', error);
@@ -64,6 +63,7 @@ io.on('connection', (socket: CustomSocket) => {
 
 
     socket.on('send-changes', async ([documentId, changes]: any) => {
+        checkSocketAuthSession(socket, documentId);
         console.log(`Processing changes for document ${documentId}`);
 
         try {
@@ -95,6 +95,8 @@ io.on('connection', (socket: CustomSocket) => {
 
 
     socket.on('save-document', async (documentId: string) => {
+        checkSocketAuthSession(socket, documentId);
+
         console.log(`Saving document ${documentId}`);
 
         try {
@@ -126,6 +128,8 @@ io.on('connection', (socket: CustomSocket) => {
     });
 
     socket.on('update-document-title', async ({ documentId, title }: { documentId: string, title: string }) => {
+        checkSocketAuthSession(socket, documentId);
+
         try {
             const updatedDocument = await prisma.document.update({
                 where: { id: +documentId },
@@ -140,11 +144,6 @@ io.on('connection', (socket: CustomSocket) => {
             socket.emit('error', { message: 'Failed to update document title' });
         }
     });
-
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
-
 
     socket.on('disconnect', () => {
         console.log('Client disconnected');

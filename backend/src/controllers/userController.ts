@@ -73,7 +73,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
         const user = { ...result } as Partial<User>;
         delete user.password;
         
-        const access_token = JWT.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '4h' })
+        const access_token = JWT.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '2m' })
         res.json({ success: true, user, access_token });
 
     } catch (error) {
