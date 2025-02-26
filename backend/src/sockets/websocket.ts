@@ -1,8 +1,7 @@
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { app, prisma, redisClient } from '../../app';
-import Delta from 'quill-delta'; // Ensure installed: npm install quill-delta
-import { User } from '@prisma/client';
+import Delta from 'quill-delta';
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -48,7 +47,7 @@ io.on('connection', (socket: CustomSocket) => {
             }
 
             // Check if user attempting to join is owner or at least a collaborator
-            const usersAssociatedWithDoc = await prisma.document.findUnique({ where: { id: +documentId }, select: { owner_id: true, collaborators: true } }) as { owner_id: number, collaborators: any[] };
+            const usersAssociatedWithDoc = await prisma.document.findUnique({ where: { id: +documentId }, select: { title: true, owner_id: true, collaborators: true } }) as { title: string, owner_id: number, collaborators: any[] };
 
             if (+userId !== usersAssociatedWithDoc?.owner_id && !usersAssociatedWithDoc.collaborators.some(user => user.id === +userId)) {
                 console.error('error', 'You are not authorized to view this document');
@@ -57,7 +56,7 @@ io.on('connection', (socket: CustomSocket) => {
             }
 
             socket.join(documentId);
-            socket.emit('load-document', JSON.parse(document));
+            socket.emit('load-document', { doc: JSON.parse(document), title: usersAssociatedWithDoc.title });
         } catch (error) {
             console.error('Error fetching document:', error);
         }
@@ -124,6 +123,26 @@ io.on('connection', (socket: CustomSocket) => {
         } catch (error) {
             console.error('Error saving document:', error);
         }
+    });
+
+    socket.on('update-document-title', async ({ documentId, title }: { documentId: string, title: string }) => {
+        try {
+            const updatedDocument = await prisma.document.update({
+                where: { id: +documentId },
+                data: { title },
+            });
+
+            if (updatedDocument) {
+                io.to(documentId).emit('document-title-updated', { documentId, title });
+            }
+        } catch (error) {
+            console.error('Error updating document title:', error);
+            socket.emit('error', { message: 'Failed to update document title' });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
     });
 
 

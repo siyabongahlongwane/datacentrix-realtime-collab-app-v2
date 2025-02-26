@@ -50,7 +50,7 @@ const Avatar = ({ width, height, bg, fontSize }: IAvatar) => {
         <span className='text-white' style={{ fontSize: `${fontSize}px` }}>{initials}</span>
       </div>
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[11]">
           <Link href="/documents" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
             <FaFileAlt className="mr-2" />
             Documents
