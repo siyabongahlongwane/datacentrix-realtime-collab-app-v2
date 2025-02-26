@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { useAuthStore } from "../store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { useDocumentStore } from "../store/useDocumentStore";
 
 interface IDocumentTableViewProps {
     title: string,
@@ -15,7 +16,8 @@ interface IDocumentTableViewProps {
     error: string
 }
 const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, error: initialError }: IDocumentTableViewProps) => {
-    const [documents, setDocuments] = useState<IDocumentCard[]>(initialDocuments);
+    console.log(initialDocuments)
+    const { setDocuments } = useDocumentStore();
     const [error, setError] = useState<string>(initialError);
     const [isCreating, setIsCreating] = useState<boolean>(false);
     const { user } = useAuthStore(state => state);
@@ -27,7 +29,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
             setError('');
             const response = await axios.post<IDocumentCard>(`${process.env.NEXT_PUBLIC_SERVER_URL}/documents/create-document`, { owner_id: user?.id });
             const newDoc = response.data;
-            setDocuments(prevDocuments => [newDoc, ...prevDocuments]);
+            setDocuments([newDoc, ...initialDocuments]);
             router.push(`/documents/${newDoc.id}`);
         } catch (err) {
             console.error('Error creating new document:', err);
@@ -54,7 +56,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
 
             {error && <div className='text-red-400'>{error}</div>}
 
-            {!documents.length ? (
+            {!initialDocuments.length ? (
                 <div className='text-white'>No documents found</div>
             ) : (
                 <div className='flex flex-wrap gap-4 mt-4 box-border'>
@@ -73,7 +75,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
                         <div className="max-h-[140px] overflow-y-auto">
                             <table className="min-w-full bg-white">
                                 <tbody className="divide-y">
-                                    {documents.map((document) => (
+                                    {initialDocuments.map((document) => (
                                         <tr key={document.id} className="border-b hover:bg-gray-50">
                                             <td className="py-3 w-[40%] px-4 flex items-center space-x-2">
                                                 <IoDocumentTextOutline color="#000" fontSize={20} />
