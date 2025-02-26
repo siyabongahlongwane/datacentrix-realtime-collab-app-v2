@@ -11,7 +11,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 const Documents = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
-    const { user } = useAuthStore(state => state);
+    const { user, access_token } = useAuthStore(state => state);
     const { setDocuments, filterDocuments, filteredDocuments } = useDocumentStore();
 
     const fetchDocuments = useCallback(async () => {
@@ -35,7 +35,7 @@ const Documents = () => {
         if (user) {
             fetchDocuments();
         }
-    }, [user, fetchDocuments]);
+    }, [user, fetchDocuments, access_token]);
 
     if (loading) {
         return <div>Loading documents...</div>;

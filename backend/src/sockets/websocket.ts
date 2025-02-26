@@ -42,7 +42,8 @@ io.on('connection', (socket: ICustomSocket) => {
                     document = JSON.stringify(doc.content);
                     await redisClient.set(`document:${documentId}`, document, { EX: 600 });
                 } else {
-                    document = JSON.stringify({ ops: [] }); // Initialize empty document
+                    socket.emit('error', { message: `Document with id '${documentId}' not found`, redirect: true });
+                    return;
                 }
             }
 
