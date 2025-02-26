@@ -9,7 +9,7 @@ import { FaShare } from "react-icons/fa";
 import Link from 'next/link';
 const Header = ({ showShareBtn, showSearchbar }: { showSearchbar?: boolean, showShareBtn?: boolean }) => {
     return (
-        <div className='bg-white h-16 flex items-center px-4 datacentrix-header'>
+        <div className='bg-white h-16 flex items-center px-4 datacentrix-header position-sticky top-0 z-[10]'>
             <div className="flex items-center justify-between w-full">
                 <Link href={'/documents'}>
                     <Image src={logo} alt="Logo" width={180} />
