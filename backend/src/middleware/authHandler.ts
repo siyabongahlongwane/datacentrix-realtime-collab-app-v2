@@ -7,7 +7,7 @@ interface JwtPayload {
     email: string;
 }
 
-interface ModifiedRequest extends Request {
+export interface ModifiedRequest extends Request {
     user?: import('@prisma/client').User;
 }
 
@@ -47,4 +47,24 @@ const authHandler = asyncHandler(async (req: ModifiedRequest, res: Response, nex
     }
 });
 
-export { authHandler };
+const authorizeEditCollaborators = (userRole: string) => {
+    return (req: ModifiedRequest, res: Response, next: NextFunction) => {
+        const collaborators = prisma.collaborator.findUnique({
+            where: {
+                user_id_document_id: {
+                    document_id: +req.params.id,
+                    user_id: req.user?.id!
+                }
+            }
+        })
+
+        console.log({ collaborators, userRole });
+        if (true) {
+            next()
+        } else {
+            res.status(403).json({ message: 'Forbidden, insufficient permissions' })
+        }
+    }
+}
+
+export { authHandler, authorizeEditCollaborators };

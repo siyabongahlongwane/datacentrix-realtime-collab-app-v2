@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/db';
 import asyncHandler from 'express-async-handler';
 import redisClient from '../../config/redis';
+import { ModifiedRequest } from '../middleware/authHandler';
 
 export const getDocument = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -65,22 +66,16 @@ export const getAllDocuments = asyncHandler(async (req: Request, res: Response, 
       where: { owner_id: +id },
     });
 
-    if (!documents.length) {
-      const error = new Error('No documents found');
-      Object.assign(error, { status: 404 });
-      throw error;
-    }
-
     // Cache the documents
-    await redisClient.set(cacheKey, JSON.stringify(documents), { 'EX': 600 });
+    await redisClient.set(cacheKey, JSON.stringify(documents || []), { 'EX': 600 });
 
-    res.json(documents);
+    res.json(documents || []);
   } catch (error: any) {
     next(error);
   }
 });
 
-export const createDocument = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const createDocument = asyncHandler(async (req: ModifiedRequest, res: Response, next: NextFunction) => {
   const { owner_id } = req.body;
   if (!owner_id) {
     const error = new Error('Owner id field is required');
@@ -93,7 +88,7 @@ export const createDocument = asyncHandler(async (req: Request, res: Response, n
       data: {
         content: { ops: [] },
         owner_id,
-        collaborators: [],
+        collaborators: { create: [] },
         cursor_positions: [],
         history: [],
       },
@@ -104,6 +99,15 @@ export const createDocument = asyncHandler(async (req: Request, res: Response, n
       Object.assign(error, { status: 500 });
       throw error;
     }
+
+    await prisma.collaborator.create({
+      data: {
+        user_id: req.user?.id as number,
+        document_id: document.id,
+        role: "Owner",
+      },
+    });
+
 
     // Invalidate the cache for the owner's documents
     const cacheKey = `documents:owner:${owner_id}`;
