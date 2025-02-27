@@ -3,9 +3,10 @@ import { prisma } from '../../app';
 import asyncHandler from 'express-async-handler';
 
 import { comparePasswords, hashPassword, validatePasswordParams } from '../utilities';
-import { User } from '@prisma/client';
+
 import JWT from 'jsonwebtoken';
 import { ModifiedRequest } from '../middleware/authHandler';
+import { IUser } from '../interfaces/IUser';
 
 export const createNewUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -36,7 +37,7 @@ export const createNewUser = asyncHandler(async (req: Request, res: Response, ne
 
         const result = await prisma.user.create({ data: { ...req.body, password: hashedPassword } });
         if (result?.id) {
-            const newUser = { ...result } as Partial<User>;
+            const newUser = { ...result } as Partial<IUser>;
             delete newUser.password;
             res.status(201).json({ message: 'User created', user: newUser });
             return;
@@ -71,7 +72,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
             return;
         }
 
-        const user = { ...result } as Partial<User>;
+        const user = { ...result } as Partial<IUser>;
         delete user.password;
 
         const access_token = JWT.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '2h' })

@@ -125,9 +125,7 @@ io.on('connection', (socket: ICustomSocket) => {
             await prisma.document.update({
                 where: { id: +documentId },
                 data: { content, last_edited: new Date() },
-            }).then(result => {
-                console.log('RESULT', { result })
-            });
+            })
 
             // Clear Redis deltas after saving
             await redisClient.del(`deltas:${documentId}`);

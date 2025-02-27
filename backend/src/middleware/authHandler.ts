@@ -2,13 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import JWT from 'jsonwebtoken';
 import { prisma } from '../../app';
 import asyncHandler from 'express-async-handler';
+import { IUser } from '../interfaces/IUser';
 interface JwtPayload {
     id: string;
     email: string;
 }
 
 export interface ModifiedRequest extends Request {
-    user?: import('@prisma/client').User;
+    user?: IUser
 }
 
 const authHandler = asyncHandler(async (req: ModifiedRequest, res: Response, next: NextFunction): Promise<any> => {
