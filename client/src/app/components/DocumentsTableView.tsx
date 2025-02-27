@@ -1,7 +1,5 @@
 import { humanDateFormat } from "@/utilities/transformDate";
-import { IDocumentCard } from "./DocumentCard"
 import { IoDocumentTextOutline } from "react-icons/io5";
-import Avatar from "./Avatar";
 import Link from "next/link";
 import { useState } from 'react';
 import { useAuthStore } from "../store/useAuthStore";
@@ -9,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useDocumentStore } from "../store/useDocumentStore";
 import { useToastStore } from "../store/useToastStore";
 import axiosInstance from "@/utilities/axiosInterceptor";
+import { IDocumentCard } from "../interfaces/IDocumentCard";
 
 interface IDocumentTableViewProps {
     title: string,
@@ -37,7 +36,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
         } catch (err) {
             console.error('Error creating new document:', err);
             setError('Failed to create a new document. Please try again.');
-            toggleToast({ message: 'Failed to create a new document. Please try again.', type: 'error', open: true});
+            toggleToast({ message: 'Failed to create a new document. Please try again.', type: 'error', open: true });
         } finally {
             setIsCreating(false);
         }
@@ -71,7 +70,7 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
                                     <th className="py-3 w-[40%] px-4 text-left">Name</th>
                                     <th className="py-3 w-[20%] px-4 text-left">Owner</th>
                                     <th className="py-3 w-[20%] px-2 text-left">Last Modified</th>
-                                    <th className="py-3 w-[20%] px-2 text-left">File Size</th>
+                                    <th className="py-3 w-[20%] px-2 text-left"></th>
                                 </tr>
                             </thead>
                         </table>
@@ -87,12 +86,22 @@ const DocumentsTableView = ({ title, documents: initialDocuments, showAddBtn, er
                                             </td>
                                             <td className="py-3 w-[20%] px-4">
                                                 <div className="flex items-center space-x-2">
-                                                    <Avatar width='w-7' height='h-7' bg='bg-[#005d87]' fontSize={10} />
-                                                    <small className="text-gray-600 font-semibold">Me</small>
+                                                    <div
+                                                        className={`w-7 h-7 bg-[#005d87] rounded-full flex items-center justify-center cursor-pointer`}
+                                                    >
+                                                        <span className='text-white' style={{ fontSize: `10px` }}>
+                                                            {
+                                                                document?.owner_id == user?.id ? (`${user?.first_name[0]}${user?.last_name[0]}`) : (`${document.owner?.first_name[0]}${document.owner?.last_name[0]}`)
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                    <small className="text-gray-600 font-semibold">{
+                                                        document?.owner_id == user?.id ? 'Me' : (`${document.owner?.first_name} ${document.owner?.last_name}`)
+                                                    }</small>
                                                 </div>
                                             </td>
                                             <td className="py-3 w-[20%] px-4 text-gray-600">{humanDateFormat(document.last_edited)}</td>
-                                            <td className="py-3 w-[20%] px-4 text-gray-600">2.4 MB</td>
+                                            <td className="py-3 w-[20%] px-4 text-gray-600"></td>
                                         </tr>
                                     ))}
                                 </tbody>

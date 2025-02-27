@@ -19,9 +19,12 @@ const Documents = () => {
             setLoading(true);
             setError('');
 
-            const response = await axiosInstance.get<IDocumentCard[]>(`/documents/getall?id=${user?.id}`);
+            const response = await Promise.all([
+                axiosInstance.get<IDocumentCard[]>(`/documents/getall?id=${user?.id}`),
+                axiosInstance.get<IDocumentCard[]>(`/documents/getshared`)
+            ]);
 
-            setDocuments(response.data);
+            setDocuments(response[0].data.concat(response[1].data));
             filterDocuments();
         } catch (err) {
             setDocuments([]);
@@ -31,6 +34,7 @@ const Documents = () => {
             setLoading(false);
         }
     }, [setDocuments, user, filterDocuments])
+
 
     useEffect(() => {
         if (user) {
@@ -50,8 +54,8 @@ const Documents = () => {
         <div className='bg-[#005d87]'>
             <div className='flex flex-col gap-3 p-4'>
                 <DocumentsList title='Recently Viewed' documents={filteredDocuments.slice(0, 3)} error={error} />
-                <DocumentsTableView title='My Documents' documents={filteredDocuments} showAddBtn error={error} />
-                <DocumentsTableView title='Shared With Me' documents={filteredDocuments} error={error} />
+                <DocumentsTableView title='My Documents' documents={filteredDocuments.filter(doc => doc.owner_id == user?.id)} showAddBtn error={error} />
+                <DocumentsTableView title='Shared With Me' documents={filteredDocuments.filter(doc => doc.owner_id != user?.id)} error={error} />
             </div>
         </div>
     );

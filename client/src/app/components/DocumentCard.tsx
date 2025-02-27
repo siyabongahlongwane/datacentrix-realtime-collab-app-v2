@@ -4,12 +4,7 @@ import { humanDateFormat } from '@/utilities/transformDate';
 import Link from 'next/link';
 import React from 'react'
 import { IoDocumentTextOutline } from "react-icons/io5";
-
-export interface IDocumentCard {
-    id: string;
-    title: string;
-    last_edited: string;
-}
+import { IDocumentCard } from '../interfaces/IDocumentCard';
 
 const DocumentCard = ({ document }: { document: IDocumentCard }) => {
     const { id, title, last_edited } = document;

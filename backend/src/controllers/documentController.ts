@@ -118,3 +118,40 @@ export const createDocument = asyncHandler(async (req: ModifiedRequest, res: Res
     next(error);
   }
 });
+
+export const getCollaboratorDocuments = async (req: ModifiedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return 
+    }
+
+    const documents = await prisma.document.findMany({
+      where: {
+        owner_id: { not: userId },
+        collaborators: {
+          some: { user_id: userId },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        owner: {
+          select: {
+            first_name: true,
+            last_name: true,
+            email: true,
+          },
+        },
+        last_edited: true,
+      },
+    });
+
+    res.json(documents);
+  } catch (error) {
+    console.error("Error fetching collaborator documents:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

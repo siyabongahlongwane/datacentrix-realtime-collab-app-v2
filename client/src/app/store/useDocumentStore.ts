@@ -18,7 +18,9 @@ export const useDocumentStore = create<DocumentStoreState>((set, get) => ({
     filteredDocuments: [],
     filterDocuments: () => {
         const { search, documents } = get();
-        const filteredDocuments = documents.filter((doc) => {
+        const filteredDocuments = documents?.sort((a, b) => {
+            return new Date(b.last_edited).getTime() - new Date(a.last_edited).getTime();
+        })?.filter((doc) => {
             if (!search) {
                 return doc;
             }
