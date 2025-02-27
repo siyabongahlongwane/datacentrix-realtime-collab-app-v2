@@ -14,7 +14,7 @@ export const addCollaborator = asyncHandler(async (req: Request, res: Response, 
 
     try {
         const document = await prisma.document.findUnique({
-            where: { id: document_id },
+            where: { id: +document_id },
             include: { owner: true },
         });
 
@@ -25,7 +25,7 @@ export const addCollaborator = asyncHandler(async (req: Request, res: Response, 
         }
 
         const existingCollaborator = await prisma.collaborator.findFirst({
-            where: { document_id, user_id },
+            where: { document_id: +document_id, user_id: +user_id },
         });
 
         if (existingCollaborator) {
@@ -35,7 +35,7 @@ export const addCollaborator = asyncHandler(async (req: Request, res: Response, 
         }
 
         await prisma.collaborator.create({
-            data: { document_id, user_id, role: role || 'Viewer' },
+            data: { document_id: +document_id, user_id: +user_id, role: role || 'Viewer' },
         });
 
         const cacheKey = `documents:collaborators:${document_id}`;
@@ -58,7 +58,7 @@ export const removeCollaborator = asyncHandler(async (req: Request, res: Respons
 
     try {
         const document = await prisma.document.findUnique({
-            where: { id: document_id },
+            where: { id: +document_id },
             include: { owner: true },
         });
 
@@ -69,7 +69,7 @@ export const removeCollaborator = asyncHandler(async (req: Request, res: Respons
         }
 
         const existingCollaborator = await prisma.collaborator.findFirst({
-            where: { document_id, user_id },
+            where: { document_id: +document_id, user_id: +user_id },
         });
 
         if (!existingCollaborator) {
@@ -79,7 +79,7 @@ export const removeCollaborator = asyncHandler(async (req: Request, res: Respons
         }
 
         await prisma.collaborator.deleteMany({
-            where: { document_id, user_id },
+            where: { document_id: +document_id, user_id: +user_id },
         });
 
         const cacheKey = `documents:collaborators:${document_id}`;
@@ -102,7 +102,7 @@ export const changeCollaboratorRole = asyncHandler(async (req: Request, res: Res
 
     try {
         const document = await prisma.document.findUnique({
-            where: { id: document_id },
+            where: { id: +document_id },
             include: { owner: true },
         });
 
@@ -113,7 +113,7 @@ export const changeCollaboratorRole = asyncHandler(async (req: Request, res: Res
         }
 
         const existingCollaborator = await prisma.collaborator.findFirst({
-            where: { document_id, user_id },
+            where: { document_id: +document_id, user_id: +user_id },
         });
 
         if (!existingCollaborator) {
@@ -123,7 +123,7 @@ export const changeCollaboratorRole = asyncHandler(async (req: Request, res: Res
         }
 
         await prisma.collaborator.updateMany({
-            where: { document_id, user_id },
+            where: { document_id: +document_id, user_id: +user_id },
             data: { role },
         });
 

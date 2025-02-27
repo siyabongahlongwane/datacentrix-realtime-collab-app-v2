@@ -24,7 +24,7 @@ export const getDocument = asyncHandler(async (req: Request, res: Response, next
 
     // If not in cache, fetch from the database
     const document = await prisma.document.findUnique({
-      where: { id: documentId },
+      where: { id: +documentId },
     });
 
     if (!document) {
@@ -103,7 +103,7 @@ export const createDocument = asyncHandler(async (req: ModifiedRequest, res: Res
     await prisma.collaborator.create({
       data: {
         user_id: req.user?.id as number,
-        document_id: document.id,
+        document_id: +document.id,
         role: "Owner",
       },
     });

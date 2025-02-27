@@ -26,44 +26,57 @@ const applyOT = (currentContent: any, changes: any) => {
 };
 
 io.on('connection', (socket: ICustomSocket) => {
-    console.log('New client connected attempt to connect');
+    console.log('New client connected:', socket.id);
 
-    socket.on('get-document', async ([documentId, userId]: [string, string]) => {
-
+    socket.on('get-document', async ({ documentId, userId, first_name, last_name }) => {
+        socket.userId = userId;
+        socket.documentId = documentId;
+        console.log('Fetching document', { documentId, userId, first_name, last_name });
         checkSocketAuthSession(socket, documentId);
-        console.log(`Fetching document ${documentId}`);
 
         try {
             let document = await redisClient.get(`document:${documentId}`);
             if (!document) {
                 const doc = await prisma.document.findUnique({ where: { id: +documentId } });
-
                 if (doc) {
                     document = JSON.stringify(doc.content);
                     await redisClient.set(`document:${documentId}`, document, { EX: 600 });
                 } else {
-                    socket.emit('error', { message: `Document with id '${documentId}' not found`, redirect: true });
+                    socket.emit('error', { message: `Document not found`, redirect: true });
                     return;
                 }
             }
 
-            // // Check if user attempting to join is owner or at least a collaborator
-            const docAssoc = await prisma.document.findFirst({ where: { id: +documentId }, select: { title: true, collaborators: true } }) as { title: string, collaborators: any[] };
+            const docAssoc = await prisma.document.findFirst({
+                where: { id: +documentId },
+                select: { title: true, collaborators: true }
+            });
 
-            const existingCollaborator = docAssoc?.collaborators?.find(collaborator => collaborator.user_id === +userId);
-
+            const existingCollaborator = docAssoc?.collaborators?.find(collab => collab.user_id === +userId);
             if (!existingCollaborator) {
-                console.error('error', 'You are not authorized to view this document');
-                socket.emit('error', { message: 'You are not authorized to view this document', redirect: true });
+                socket.emit('error', { message: 'Unauthorized access', redirect: true });
                 return;
             }
 
-            socket.emit('load-document', { doc: JSON.parse(document), title: docAssoc.title, role: existingCollaborator?.role });
+            // Store user details in Redis Set
+            await redisClient.sAdd(`active_users:${documentId}`, JSON.stringify({ userId, first_name, last_name }));
+            console.log(`User ${userId} added to active_users:${documentId}`);
+
+            socket.emit('load-document', {
+                doc: JSON.parse(document),
+                title: docAssoc?.title,
+                role: existingCollaborator?.role
+            });
+
+            // Notify users of presence update
+            const activeUsers = await getActiveUsers(documentId);
+
+            io.to(documentId).emit('update-user-presence', activeUsers);
         } catch (error) {
+            socket.emit('error', { message: 'Error fetching document, try to reopen it', redirect: true });
             console.error('Error fetching document:', error);
         }
     });
-
 
     socket.on('send-changes', async ({ documentId, delta: changes }: any) => {
         checkSocketAuthSession(socket, documentId);
@@ -154,10 +167,38 @@ io.on('connection', (socket: ICustomSocket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
+
+    socket.on('disconnect', async () => {
+        console.log('Client disconnected:', socket.id);
+        if (socket.userId && socket.documentId) {
+            try {
+                const activeUsers = (await redisClient.sMembers(`active_users:${socket.documentId}`))
+                    .map(user => JSON.parse(user))
+                    .filter(user => user.userId !== socket.userId);
+
+                // Update Redis with filtered users
+                await redisClient.del(`active_users:${socket.documentId}`);
+                if (activeUsers.length > 0) {
+                    await redisClient.sAdd(`active_users:${socket.documentId}`, activeUsers.map(user => JSON.stringify(user)));
+                }
+
+                // Notify all clients users of presence update
+                io.to(socket.documentId).emit('update-user-presence', activeUsers);
+            } catch (error) {
+                socket.emit('error', { message: 'Error removing user from presence list:' });
+                console.error('Error removing user from presence list:', error);
+            }
+        }
     });
 });
+
+// Function to get active users
+const getActiveUsers = async (documentId: string) => {
+    const members = await redisClient.sMembers(`active_users:${documentId}`);
+    const users = members.map(user => JSON.parse(user));
+    console.log(`Active users for document ${documentId}:`, users);
+    return users;
+}
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {

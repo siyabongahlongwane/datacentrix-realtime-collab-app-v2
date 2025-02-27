@@ -8,6 +8,9 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import DocumentNameInput from './DocumentNameInput';
 import { useToastStore } from '../store/useToastStore';
+import { IUser } from '../interfaces/IUser';
+import ActiveUsersList from './ActiveUsersList';
+import { IActiveUserBadge } from '../interfaces/IActiveUserBadge';
 
 const SAVE_INTERVAL_MS = 5000;
 interface WrapperRef {
@@ -23,6 +26,8 @@ const Editor = () => {
   const [documentName, setDocumentName] = useState('Untitled Document');
   const { toggleToast } = useToastStore();
   const [disableInput, setDisableInput] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<IActiveUserBadge[]>([]);
+  const [mode, setMode] = useState('');
 
   useEffect(() => {
     const _socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
@@ -62,6 +67,7 @@ const Editor = () => {
       console.log('load-document', document);
       setDocumentName(document.title);
       quill.setContents(document.doc.ops);
+      setMode(document.role);
       if (document.role == 'Viewer') {
         setDisableInput(true);
         quill.disable();
@@ -71,8 +77,9 @@ const Editor = () => {
       quill.enable();
     });
 
-    socket.emit('get-document', [documentId, user?.id]);
-  }, [socket, quill, documentId, user?.id]);
+    const { first_name, last_name } = user as IUser;
+    socket.emit('get-document', { documentId, userId: user?.id, first_name, last_name });
+  }, [socket, quill, documentId, user]);
 
   useEffect(() => {
     if (!socket || !quill) return;
@@ -142,6 +149,24 @@ const Editor = () => {
     };
   }, [socket, quill, documentId]);
 
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUserPresence = (users: Array<{ first_name: string, last_name: string }>) => {
+      setActiveUsers(users);
+    };
+
+    socket.on('update-user-presence', handleUserPresence);
+
+    return () => {
+      socket.off('update-user-presence', handleUserPresence);
+    };
+  }, [socket]);
+
+
+
   const wrapperRef: WrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
     if (wrapper == null) return;
 
@@ -161,13 +186,21 @@ const Editor = () => {
 
   return (
     <div className='relative p-4'>
-      <div className="pb-4">
+      <div className="pb-4 flex justify-between items-center">
         <DocumentNameInput
           documentName={documentName}
           documentId={documentId as string}
           onUpdateFileName={handleUpdateFileName}
           disabled={disableInput}
         />
+        <div>
+          {
+            mode && <div className="h3 text-white">
+              You are in <b>{mode} </b> mode:
+            </div>
+          }
+        </div>
+        <ActiveUsersList activeUsers={activeUsers} />
       </div>
       <div ref={wrapperRef} className='editor-container w-full'></div>
     </div>
