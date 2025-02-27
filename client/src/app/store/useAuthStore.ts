@@ -9,6 +9,7 @@ type AuthState = {
     isAuthenticated: boolean;
     login: (payload: { user: IUser; access_token: string }) => void;
     logout: () => void;
+    updateLocalUser: (user: IUser) => void;
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -27,7 +28,10 @@ export const useAuthStore = create<AuthState>()(
                 },
                 logout: () => {
                     set({ user: null, access_token: null, isAuthenticated: false });
-                }
+                },
+                updateLocalUser: (user: IUser) => {
+                    set({ user: { ...user } });
+                },
             }),
             {
                 name: "auth-storage",
