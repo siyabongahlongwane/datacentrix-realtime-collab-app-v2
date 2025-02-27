@@ -49,7 +49,7 @@ io.on('connection', (socket: ICustomSocket) => {
 
             // // Check if user attempting to join is owner or at least a collaborator
             const docAssoc = await prisma.document.findFirst({ where: { id: +documentId }, select: { title: true, collaborators: true } }) as { title: string, collaborators: any[] };
-            console.log({ xxx: docAssoc.collaborators })
+
             const existingCollaborator = docAssoc?.collaborators?.find(collaborator => collaborator.user_id === +userId);
 
             if (!existingCollaborator) {
@@ -65,9 +65,10 @@ io.on('connection', (socket: ICustomSocket) => {
     });
 
 
-    socket.on('send-changes', async ([documentId, changes]: any) => {
+    socket.on('send-changes', async ({ documentId, delta: changes }: any) => {
         checkSocketAuthSession(socket, documentId);
         console.log(`Processing changes for document ${documentId}`);
+        console.log('Changes:', changes);
 
         try {
             let document = await redisClient.get(`document:${documentId}`);
@@ -82,6 +83,9 @@ io.on('connection', (socket: ICustomSocket) => {
 
             // Apply Operational Transformation (OT)
             const transformedChanges = applyOT(currentContent, changes);
+
+            console.log('Transformed changes:', transformedChanges);
+            console.log('documentId', documentId);
 
             // Save to Redis in order
             await redisClient.multi()
@@ -100,7 +104,7 @@ io.on('connection', (socket: ICustomSocket) => {
     socket.on('save-document', async (documentId: string) => {
         checkSocketAuthSession(socket, documentId);
 
-        console.log(`Saving document ${documentId}`);
+        // console.log(`Saving document ${documentId}`);
 
         try {
             const deltas = await redisClient.lRange(`deltas:${documentId}`, 0, -1);
@@ -115,10 +119,14 @@ io.on('connection', (socket: ICustomSocket) => {
                 content = applyOT(content, delta);
             });
 
+            console.log(`Saving document ${documentId}`);
+
             // Save to Database
             await prisma.document.update({
                 where: { id: +documentId },
                 data: { content, last_edited: new Date() },
+            }).then(result => {
+                console.log('RESULT', { result })
             });
 
             // Clear Redis deltas after saving

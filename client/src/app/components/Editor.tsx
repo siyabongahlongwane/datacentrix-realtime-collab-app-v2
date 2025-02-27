@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import DocumentNameInput from './DocumentNameInput';
 import { useToastStore } from '../store/useToastStore';
 
-const SAVE_INTERVAL_MS = 10000;
+const SAVE_INTERVAL_MS = 5000;
 interface WrapperRef {
   (wrapper: HTMLDivElement | null): void;
 }
@@ -42,8 +42,9 @@ const Editor = () => {
 
   useEffect(() => {
     if (!socket || !quill) return;
-
+    console.log('changes')
     const receiveChangesHandler = (delta: Delta) => {
+      console.log({ delta });
       quill.updateContents(delta);
     };
 
@@ -58,8 +59,9 @@ const Editor = () => {
     if (!socket || !quill) return;
 
     socket.once('load-document', document => {
+      console.log('load-document', document);
       setDocumentName(document.title);
-      quill.setContents(document.ops);
+      quill.setContents(document.doc.ops);
       if (document.role == 'Viewer') {
         setDisableInput(true);
         quill.disable();
@@ -122,6 +124,23 @@ const Editor = () => {
       socket.off('document-title-updated', documentTitleUpdatedHandler);
     };
   }, [socket]);
+
+
+  useEffect(() => {
+    if (!socket || !quill) return;
+
+    const textChangeHandler = (delta: Delta, oldDelta: Delta, source: string) => {
+      if (source !== 'user') return; // Only send changes made by the user
+      console.log({ delta })
+      socket.emit('send-changes', { documentId, delta });
+    };
+
+    quill.on('text-change', textChangeHandler);
+
+    return () => {
+      quill.off('text-change', textChangeHandler);
+    };
+  }, [socket, quill]);
 
   const wrapperRef: WrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
     if (wrapper == null) return;
