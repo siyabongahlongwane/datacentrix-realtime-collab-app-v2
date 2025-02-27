@@ -140,7 +140,7 @@ const Editor = () => {
     return () => {
       quill.off('text-change', textChangeHandler);
     };
-  }, [socket, quill]);
+  }, [socket, quill, documentId]);
 
   const wrapperRef: WrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
     if (wrapper == null) return;

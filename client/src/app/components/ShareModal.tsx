@@ -6,7 +6,6 @@ import { useAuthStore } from "../store/useAuthStore";
 
 interface ShareModalProps {
     onClose: () => void;
-    documentId: number;
 }
 
 interface Collaborator {
@@ -17,7 +16,7 @@ interface Collaborator {
     role: "Owner" | "Editor" | "Viewer";
 }
 
-const ShareModal = ({ onClose, documentId = 1 }: ShareModalProps) => {
+const ShareModal = ({ onClose }: ShareModalProps) => {
     const [users, setUsers] = useState<Collaborator[]>([]);
     const [email, setEmail] = useState("");
     const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
@@ -25,6 +24,7 @@ const ShareModal = ({ onClose, documentId = 1 }: ShareModalProps) => {
     const [allUsers, setAllUsers] = useState<IUser[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<IUser[]>([]);
     const { user: authUser } = useAuthStore();
+    const [documentId] = useState<string>(window.location.href.split('/').pop() || "");
 
     useEffect(() => {
         const fetchCollaborators = async () => {
@@ -108,14 +108,14 @@ const ShareModal = ({ onClose, documentId = 1 }: ShareModalProps) => {
         }
     };
 
-    const updateUserRole = async (userId: number, newRole:  "Editor" | "Viewer") => {
+    const updateUserRole = async (userId: number, newRole: "Editor" | "Viewer") => {
         try {
             await axiosInstance.put(`/collaborator/changerole/${documentId}`, {
                 document_id: documentId,
                 user_id: userId,
                 role: newRole
             });
-    
+
             // Update local state
             setUsers(prevUsers => prevUsers.map(user =>
                 user.id === userId ? { ...user, role: newRole } : user
@@ -124,7 +124,7 @@ const ShareModal = ({ onClose, documentId = 1 }: ShareModalProps) => {
             console.error("Error updating role:", error);
         }
     };
-    
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
