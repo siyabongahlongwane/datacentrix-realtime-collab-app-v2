@@ -48,21 +48,26 @@ const authHandler = asyncHandler(async (req: ModifiedRequest, res: Response, nex
 });
 
 const authorizeEditCollaborators = (userRole: string) => {
-    return (req: ModifiedRequest, res: Response, next: NextFunction) => {
-        const collaborators = prisma.collaborator.findUnique({
+    return async (req: ModifiedRequest, res: Response, next: NextFunction) => {
+        const result = await prisma.collaborator.findUnique({
             where: {
                 user_id_document_id: {
-                    document_id: +req.params.id,
+                    document_id: +req.params.document_id,
                     user_id: req.user?.id!
                 }
+            },
+            select: {
+                role: true // Ensure we only fetch the 'role' field
             }
-        })
+        });
 
-        console.log({ collaborators, userRole });
-        if (true) {
-            next()
+        const isDocOwner = result?.role === 'Owner';
+        console.log(result?.role);
+
+        if (isDocOwner) {
+            next();
         } else {
-            res.status(403).json({ message: 'Forbidden, insufficient permissions' })
+            res.status(403).json({ message: 'Forbidden: You have no permissions to perform this action' })
         }
     }
 }

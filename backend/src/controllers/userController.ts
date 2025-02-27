@@ -5,6 +5,7 @@ import asyncHandler from 'express-async-handler';
 import { comparePasswords, hashPassword, validatePasswordParams } from '../utilities';
 import { User } from '@prisma/client';
 import JWT from 'jsonwebtoken';
+import { ModifiedRequest } from '../middleware/authHandler';
 
 export const createNewUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -72,11 +73,35 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
         const user = { ...result } as Partial<User>;
         delete user.password;
-        
-        const access_token = JWT.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '2m' })
+
+        const access_token = JWT.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '2h' })
         res.json({ success: true, user, access_token });
 
     } catch (error) {
         next(error);
     }
 })
+
+export const getAllUsers = async (req: ModifiedRequest, res: Response) => {
+    try {
+        const currentUserId = req.user?.id;
+        console.log({ currentUserId })
+        // Fetch all users excluding the current user
+        const users = await prisma.user.findMany({
+            where: {
+                id: { not: currentUserId },
+            },
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+            },
+        });
+
+        res.json({ users });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

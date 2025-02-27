@@ -18,12 +18,13 @@ const Documents = () => {
         try {
             setLoading(true);
             setError('');
-            
+
             const response = await axiosInstance.get<IDocumentCard[]>(`/documents/getall?id=${user?.id}`);
 
             setDocuments(response.data);
             filterDocuments();
         } catch (err) {
+            setDocuments([]);
             setError('Failed to fetch documents. Please try again later.');
             console.error('Error fetching documents:', err);
         } finally {
@@ -42,7 +43,7 @@ const Documents = () => {
     }
 
     if (error) {
-        return <div>{error}</div>;
+        return <div className='text-white'>{error}</div>;
     }
 
     return (

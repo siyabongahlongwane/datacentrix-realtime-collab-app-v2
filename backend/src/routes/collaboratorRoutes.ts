@@ -7,10 +7,10 @@ const router = express.Router();
 
 router.use(authHandler)
 
-router.route('/getcollaborators/:documentId').get(authorizeEditCollaborators('Owner'), getCollaborators);
-router.route('/addcollaborator/:documentId').post(authorizeEditCollaborators('Owner'), addCollaborator);
-router.route('/removecollaborator/:documentId').delete(authorizeEditCollaborators('Owner'), removeCollaborator);
-router.route('/changerole/:documentId').put(authorizeEditCollaborators('Owner'), changeCollaboratorRole);
+router.route('/getcollaborators/:document_id').get(getCollaborators);
+router.route('/addcollaborator').post(addCollaborator);
+router.route('/removecollaborator/:document_id').delete(authorizeEditCollaborators('Owner'), removeCollaborator);
+router.route('/changerole/:document_id').put(authorizeEditCollaborators('Owner'), changeCollaboratorRole);
 
 
 export default router;

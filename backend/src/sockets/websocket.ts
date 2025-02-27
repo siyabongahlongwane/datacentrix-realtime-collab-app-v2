@@ -47,16 +47,18 @@ io.on('connection', (socket: ICustomSocket) => {
                 }
             }
 
-            // Check if user attempting to join is owner or at least a collaborator
-            const usersAssociatedWithDoc = await prisma.document.findUnique({ where: { id: +documentId }, select: { title: true, owner_id: true, collaborators: true } }) as { title: string, owner_id: number, collaborators: any[] };
+            // // Check if user attempting to join is owner or at least a collaborator
+            const docAssoc = await prisma.document.findFirst({ where: { id: +documentId }, select: { title: true, collaborators: true } }) as { title: string, collaborators: any[] };
+            console.log({ xxx: docAssoc.collaborators })
+            const existingCollaborator = docAssoc?.collaborators?.find(collaborator => collaborator.user_id === +userId);
 
-            if (+userId !== usersAssociatedWithDoc?.owner_id && !usersAssociatedWithDoc.collaborators.some(user => user.id === +userId)) {
+            if (!existingCollaborator) {
                 console.error('error', 'You are not authorized to view this document');
                 socket.emit('error', { message: 'You are not authorized to view this document', redirect: true });
                 return;
             }
 
-            socket.emit('load-document', { doc: JSON.parse(document), title: usersAssociatedWithDoc.title });
+            socket.emit('load-document', { doc: JSON.parse(document), title: docAssoc.title, role: existingCollaborator?.role });
         } catch (error) {
             console.error('Error fetching document:', error);
         }

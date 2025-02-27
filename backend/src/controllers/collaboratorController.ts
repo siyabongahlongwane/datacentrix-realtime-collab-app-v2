@@ -155,7 +155,7 @@ export const getCollaborators = asyncHandler(async (req: Request, res: Response,
         }
 
         const collaborators = await prisma.collaborator.findMany({
-            where: { document_id: Number(document_id) },
+            where: { document_id: +document_id },
             include: { user: { select: { id: true, email: true, first_name: true, last_name: true } } },
         });
 

@@ -22,15 +22,14 @@ const Editor = () => {
   const router = useRouter();
   const [documentName, setDocumentName] = useState('Untitled Document');
   const { toggleToast } = useToastStore();
-
+  const [disableInput, setDisableInput] = useState(false);
 
   useEffect(() => {
-    console.log({ documentId })
     const _socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
       transports: ['websocket', 'polling'],
       auth: { token: access_token },
       query: {
-        documentId: 2,
+        documentId,
       }
     });
 
@@ -61,6 +60,12 @@ const Editor = () => {
     socket.once('load-document', document => {
       setDocumentName(document.title);
       quill.setContents(document.ops);
+      if (document.role == 'Viewer') {
+        setDisableInput(true);
+        quill.disable();
+        return;
+      }
+
       quill.enable();
     });
 
@@ -142,6 +147,7 @@ const Editor = () => {
           documentName={documentName}
           documentId={documentId as string}
           onUpdateFileName={handleUpdateFileName}
+          disabled={disableInput}
         />
       </div>
       <div ref={wrapperRef} className='editor-container w-full'></div>

@@ -4,9 +4,10 @@ interface DocumentNameInputProps {
   documentName: string;
   documentId: string;
   onUpdateFileName: (newFileName: string) => void;
+  disabled: boolean;
 }
 
-export default function DocumentNameInput({ documentName, onUpdateFileName }: DocumentNameInputProps) {
+export default function DocumentNameInput({ documentName, onUpdateFileName, disabled }: DocumentNameInputProps) {
   const [editing, setEditing] = useState(false);
   const [fileName, setFileName] = useState(documentName);
 
@@ -43,11 +44,12 @@ export default function DocumentNameInput({ documentName, onUpdateFileName }: Do
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           autoFocus
+          disabled={disabled}
         />
       ) : (
         <div
           className="w-60 px-2 py-1 font-medium text-lg text-white border border-white truncate cursor-pointer hover:text-black hover:bg-gray-100 rounded"
-          onClick={() => setEditing(true)}
+          onClick={() => setEditing(!disabled)}
         >
           {fileName}
         </div>
