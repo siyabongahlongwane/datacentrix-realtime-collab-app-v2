@@ -87,25 +87,29 @@ io.on('connection', (socket: ICustomSocket) => {
     });
 
     socket.on('save-document', async (documentId: string) => {
-        checkSocketAuthSession(socket, documentId);
+        if (socket.documentId) {
+            checkSocketAuthSession(socket, socket.documentId);
 
-        try {
-            let contentString = await redisClient.get(`document:${documentId}`);
-            let content = contentString ? JSON.parse(contentString) : { ops: [] };
+            try {
+                let contentString = await redisClient.get(`document:${socket.documentId}`);
+                let content = contentString ? JSON.parse(contentString) : { ops: [] };
 
-            console.log(`Saving document ${documentId}`);
+                console.log(`Saving document ${socket.documentId}`);
 
-            // Save to Database
-            await prisma.document.update({
-                where: { id: +documentId },
-                data: { content, last_edited: new Date() },
-            });
+                // Save to Database
+                await prisma.document.update({
+                    where: { id: +socket.documentId },
+                    data: { content, last_edited: new Date() },
+                });
 
-            // Clear Redis after saving
-            await redisClient.del(`document:${documentId}`);
+                // Clear Redis after saving
+                await redisClient.del(`document:${socket.documentId}`);
 
-        } catch (error) {
-            console.error('Error saving document:', error);
+            } catch (error) {
+                console.error('Error saving document:', error);
+            }
+        } else {
+            console.error('Error: documentId is undefined');
         }
     });
 
