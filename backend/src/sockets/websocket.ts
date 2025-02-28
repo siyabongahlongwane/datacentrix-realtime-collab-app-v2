@@ -27,7 +27,10 @@ const applyOT = (currentContent: any, changes: any) => {
 
 io.on('connection', (socket: ICustomSocket) => {
     console.log('New client connected:', socket.id);
-
+    socket.on('update-cursor', (data) => {
+        socket.broadcast.emit('update-cursor', data);
+    });
+    
     socket.on('get-document', async ({ documentId, userId, first_name, last_name }) => {
         socket.userId = userId;
         socket.documentId = documentId;
@@ -167,6 +170,15 @@ io.on('connection', (socket: ICustomSocket) => {
         }
     });
 
+    socket.on('cursor-move', async ({ documentId, userId, position }) => {
+        checkSocketAuthSession(socket, documentId);
+
+        const userCursor = JSON.stringify({ userId, position });
+        await redisClient.hSet(`cursors:${documentId}`, userId.toString(), userCursor);
+
+        const allCursors = await redisClient.hVals(`cursors:${documentId}`);
+        io.to(documentId).emit('update-cursors', allCursors.map(cursor => JSON.parse(cursor)));
+    });
 
     socket.on('disconnect', async () => {
         console.log('Client disconnected:', socket.id);
@@ -181,6 +193,10 @@ io.on('connection', (socket: ICustomSocket) => {
                 if (activeUsers.length > 0) {
                     await redisClient.sAdd(`active_users:${socket.documentId}`, activeUsers.map(user => JSON.stringify(user)));
                 }
+
+                // Notify users to update cursors
+                const remainingCursors = await redisClient.hVals(`cursors:${socket.documentId}`);
+                io.to(socket.documentId).emit('update-cursors', remainingCursors.map(cursor => JSON.parse(cursor)));
 
                 // Notify all clients users of presence update
                 io.to(socket.documentId).emit('update-user-presence', activeUsers);
