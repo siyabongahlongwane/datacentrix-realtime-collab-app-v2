@@ -12,6 +12,7 @@ import { useToastStore } from '../store/useToastStore';
 import { IUser } from '../interfaces/IUser';
 import ActiveUsersList from './ActiveUsersList';
 import { IActiveUserBadge } from '../interfaces/IActiveUserBadge';
+import debounce from 'lodash.debounce';
 
 const SAVE_INTERVAL_MS = 5000;
 
@@ -32,7 +33,19 @@ const Editor = () => {
   const [activeUsers, setActiveUsers] = useState<IActiveUserBadge[]>([]);
   const [mode, setMode] = useState('');
   const cursorsRef = useRef<QuillCursors | null>(null);
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
+  // Debounced Save Function to reduce the number of save requests
+  const debouncedSave = useRef(
+    debounce(() => {
+      if (socketRef.current && documentId) {
+        const content = quill?.getContents();
+        socketRef.current.emit('save-document', { documentId, content });
+      }
+    }, SAVE_INTERVAL_MS)
+  ).current;
+
+  // Initialize Socket
   useEffect(() => {
     const _socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
       transports: ['websocket', 'polling'],
@@ -41,17 +54,20 @@ const Editor = () => {
     });
 
     setSocket(_socket);
+    socketRef.current = _socket;
 
     return () => {
       _socket.disconnect();
     };
   }, [access_token, documentId]);
+
+  // Handle incoming changes from the server
   useEffect(() => {
     if (!socket || !quill) return;
-    console.log('changes')
-    const receiveChangesHandler = (delta: Delta) => {
-      console.log({ delta });
-      quill.updateContents(delta);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const receiveChangesHandler = (content: any) => {
+      quill.setContents(content);
     };
 
     socket.on('receive-changes', receiveChangesHandler);
@@ -61,6 +77,7 @@ const Editor = () => {
     };
   }, [socket, quill]);
 
+  // Load document on initial connection
   useEffect(() => {
     if (!socket || !quill) return;
 
@@ -80,18 +97,7 @@ const Editor = () => {
     socket.emit('get-document', { documentId, userId: user?.id, first_name, last_name });
   }, [socket, quill, documentId, user]);
 
-  useEffect(() => {
-    if (!socket || !quill) return;
-
-    const interval = setInterval(() => {
-      socket.emit('save-document', documentId);
-    }, SAVE_INTERVAL_MS);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [socket, quill, documentId]);
-
+  // Error handler
   const errorHandler = useCallback(({ message, redirect, clearData }: { message: string, redirect?: boolean, clearData?: boolean }) => {
     console.error('WebSocket error:', message);
     toggleToast({ message, type: 'error', open: true });
@@ -107,6 +113,7 @@ const Editor = () => {
     }
   }, [quill, logout, router, toggleToast]);
 
+  // Listen for errors
   useEffect(() => {
     if (!socket) return;
 
@@ -115,8 +122,9 @@ const Editor = () => {
     return () => {
       socket?.off('error', errorHandler);
     };
-  }, [socket, router, logout, quill, errorHandler]);
+  }, [socket, errorHandler]);
 
+  // Listen for document title updates
   useEffect(() => {
     if (!socket) return;
 
@@ -131,13 +139,15 @@ const Editor = () => {
     };
   }, [socket]);
 
+  // Handle text changes and save document
   useEffect(() => {
     if (!socket || !quill) return;
 
     const textChangeHandler = (delta: Delta, oldDelta: Delta, source: string) => {
       if (source !== 'user') return; // Only send changes made by the user
-      console.log({ delta })
-      socket.emit('send-changes', { documentId, delta });
+      const content = quill.getContents();
+      socket.emit('send-changes', { documentId, content });
+      debouncedSave();
     };
 
     quill.on('text-change', textChangeHandler);
@@ -145,8 +155,9 @@ const Editor = () => {
     return () => {
       quill.off('text-change', textChangeHandler);
     };
-  }, [socket, quill, documentId]);
+  }, [socket, quill, documentId, debouncedSave]);
 
+  // Handle user presence updates
   useEffect(() => {
     if (!socket) return;
 
@@ -161,43 +172,7 @@ const Editor = () => {
     };
   }, [socket]);
 
-
-
-  const wrapperRef: WrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
-    if (wrapper == null) return;
-    
-    wrapper.innerHTML = '';
-    const editor = document.createElement('div');
-    wrapper.append(editor);
-    const quillInstance = new Quill(editor, {
-      theme: 'snow',
-      modules: { 
-        toolbar: TOOLBAR_OPTIONS,
-        cursors: true  // Enable cursor module
-      },
-    });
-
-    quillInstance.disable();
-    quillInstance.setText('Loading Document...');
-    setQuill(quillInstance);
-
-    cursorsRef.current = quillInstance.getModule('cursors') as QuillCursors;
-  }, []);
-
-  // Handle user presence updates
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('update-user-presence', (users: Array<{ first_name: string, last_name: string }>) => {
-      setActiveUsers(users);
-    });
-
-    return () => {
-      socket.off('update-user-presence');
-    };
-  }, [socket]);
-
-  // Real-time cursor movement
+  // Handle cursor movements
   useEffect(() => {
     if (!socket || !quill || !cursorsRef.current) return;
 
@@ -229,6 +204,27 @@ const Editor = () => {
     setDocumentName(newFileName);
     socket?.emit('update-document-title', { documentId, title: newFileName });
   };
+
+  const wrapperRef: WrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
+    if (wrapper == null) return;
+
+    wrapper.innerHTML = '';
+    const editor = document.createElement('div');
+    wrapper.append(editor);
+    const quillInstance = new Quill(editor, {
+      theme: 'snow',
+      modules: { 
+        toolbar: TOOLBAR_OPTIONS,
+        cursors: true  // Enable cursor module
+      },
+    });
+
+    quillInstance.disable();
+    quillInstance.setText('Loading Document...');
+    setQuill(quillInstance);
+
+    cursorsRef.current = quillInstance.getModule('cursors') as QuillCursors;
+  }, []);
 
   return (
     <div className='relative p-4'>
