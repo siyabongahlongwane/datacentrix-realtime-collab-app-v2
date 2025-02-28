@@ -1,5 +1,6 @@
 import React from 'react'
-import DocumentCard, { IDocumentCard } from './DocumentCard'
+import DocumentCard from './DocumentCard'
+import { IDocumentCard } from '../interfaces/IDocumentCard'
 
 const DocumentsList = ({ title, documents, error }: { title: string, documents: IDocumentCard[], error: string }) => {
     return (
